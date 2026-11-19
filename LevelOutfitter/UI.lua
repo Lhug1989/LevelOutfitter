@@ -429,7 +429,7 @@ end
 local EMPTY = {}
 -- what the ranged slot takes, for the line that says why it is empty
 local RANGED_WORD = { ROGUE = "throwing weapon", HUNTER = "bow, gun or crossbow", PRIEST = "wand", MAGE = "wand",
-    WARLOCK = "wand" }
+    WARLOCK = "wand", PALADIN = "libram", SHAMAN = "totem", DRUID = "idol" }
 -- The pieces (or consumables) to show, without headlines.
 local function SourceRows()
     if UI.view == "scrolls" then
@@ -504,7 +504,8 @@ local function Display(src)
         local what = RANGED_WORD[ns.class or ""]
         if not ranged and what then
             -- an empty ranged slot: say why (none on sale, or not worth its price at this limit). The rogue takes
-            -- thrown weapons only; classes whose ranged slot holds little (warriors, relics) get no line.
+            -- thrown weapons only; a paladin, shaman or druid a relic (libram, totem, idol), and the item data knows
+            -- of none sold at the auction house; a warrior's ranged slot holds little: no line.
             local _, to = ns.Range()
             local onSale = false
             for _, c in ipairs(ns.cands["Ranged"]) do
@@ -513,9 +514,17 @@ local function Display(src)
                     break
                 end
             end
-            list[#list + 1] = { header = "Ranged slot", note = onSale
-                and ("a " .. what .. " is on sale, but not worth its price at this gold limit (raise the limit to get it)")
-                or ("no " .. what .. " on sale for these levels" .. (ns.class == "ROGUE" and " (weapon vendors sell them)" or "")) }
+            local C = ns.ClassData()
+            local relic = C and C.relic ~= nil
+            local extra = ""
+            if ns.class == "ROGUE" then
+                extra = " (weapon vendors sell them)"
+            elseif relic and #ns.cands["Ranged"] == 0 then
+                extra = " (none is known to be sold at the auction house)"
+            end
+            list[#list + 1] = { header = relic and "Relic slot" or "Ranged slot", note = onSale
+                and ((what:find("^[aeiou]") and "an " or "a ") .. what .. " is on sale, but not worth its price at this gold limit (raise the limit to get it)")
+                or ("no " .. what .. " on sale for these levels" .. extra) }
         end
     end
     shown.kind, shown.level, shown.src, shown.list = kind, level, copy, list

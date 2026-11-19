@@ -64,7 +64,14 @@ function Scroll.SetKinds(names)
     for i = #kinds, 1, -1 do kinds[i] = nil end
     local C = ns.ClassData and ns.ClassData()
     for _, name in ipairs(names) do
-        if byKind[name] then
+        -- a kind for some specs only (spell damage, a school's elixir): shown for those (ns.spec, from Forever
+        -- Leveling BiS)
+        local only, fits = C and C.specKinds and C.specKinds[name], true
+        if only then
+            fits = false
+            for _, sp in ipairs(only) do fits = fits or sp == ns.spec end
+        end
+        if byKind[name] and fits then
             local info = kindInfo[name] or { name = name, perHour = 2 }
             local note = C and C.notes and C.notes[name]       -- the class's own words (the rogue's: the data's)
             if note then info = { name = info.name, perHour = info.perHour, note = note } end
@@ -450,6 +457,10 @@ end
 function Scroll.CanBuy(row, now)
     now = now or GetTime()
     if not ns.me then return false, "Nothing to buy." end
+    -- a kind no longer listed (a new spec dropped it) before the window drew again: not bought
+    local listed = false
+    for i = 1, #kinds do listed = listed or kinds[i].name == row.kind end
+    if not listed then return false, "The list changed." end
     if not ns.ahOpen then return false, "Open the auction house to buy." end
     if Scan.state.phase ~= "idle" then return false, "Scanning..." end
     if Scan.buy.pending or Scroll.purchase then return false, "Buying..." end

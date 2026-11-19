@@ -51,15 +51,21 @@ local NONE = {}
 -- the kinds whose buff the bar watches (the others are used at a moment of the player's choosing)
 local BUFFS = { ["Agility elixir"] = true, ["Strength elixir"] = true, ["Agility scroll"] = true, ["Strength scroll"] = true,
     ["Attack power drink"] = true, ["Stamina scroll"] = true, ["Health elixir"] = true, ["Armor elixir"] = true,
-    ["Protection scroll"] = true, ["Regeneration elixir"] = true, ["Spirit scroll"] = true }
+    ["Protection scroll"] = true, ["Regeneration elixir"] = true, ["Spirit scroll"] = true,
+    -- the classes with mana (0.8.0)
+    ["Intellect scroll"] = true, ["Intellect elixir"] = true, ["Spirit elixir"] = true, ["Spell power elixir"] = true,
+    ["Shadow power elixir"] = true, ["Frost power elixir"] = true, ["Mana regeneration elixir"] = true }
 Bar.BUFFS = BUFFS
 local CITIES = { ["Stormwind City"] = true, ["Stormwind"] = true, ["Ironforge"] = true, ["City of Ironforge"] = true,
     ["Darnassus"] = true, ["Orgrimmar"] = true, ["Thunder Bluff"] = true, ["Undercity"] = true, ["The Undercity"] = true,
     ["The Exodar"] = true, ["Silvermoon City"] = true, ["Shattrath City"] = true }
 -- Buffs from other players that classic rules put above a scroll. Taken as blocking (like a note the game has
 -- confirmed once) until one of them is seen on the character together with the scroll's own buff.
-local SEEDS = { ["Stamina scroll"] = { "Power Word: Fortitude", "Prayer of Fortitude" },
-    ["Spirit scroll"] = { "Divine Spirit", "Prayer of Spirit" } }
+-- (A warlock imp's Blood Pact too, against the stamina scroll: like any seed it is let go once the two are seen on
+-- the character together, and offered again after its rest.)
+local SEEDS = { ["Stamina scroll"] = { "Power Word: Fortitude", "Prayer of Fortitude", "Blood Pact" },
+    ["Spirit scroll"] = { "Divine Spirit", "Prayer of Spirit" },
+    ["Intellect scroll"] = { "Arcane Intellect", "Arcane Brilliance" } }
 local EVENTS = { "UI_ERROR_MESSAGE", "BAG_UPDATE", "BAG_UPDATE_DELAYED", "PLAYER_REGEN_ENABLED", "PLAYER_REGEN_DISABLED", "PLAYER_LEVEL_UP",
     "PLAYER_ENTERING_WORLD", "ZONE_CHANGED_NEW_AREA", "ZONE_CHANGED", "ZONE_CHANGED_INDOORS", "AUCTION_HOUSE_SHOW",
     "GET_ITEM_INFO_RECEIVED" }

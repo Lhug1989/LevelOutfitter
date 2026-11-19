@@ -12,7 +12,7 @@ An addon for **WoW Forever** (Interface 16001). It scans the auction house and b
 - **Consumables** in sections (scrolls, elixirs and drinks, potions, weapon stones, food), each with Buy.
 - **A buff bar** that shows a button when a scroll or elixir buff is missing and the item is in your bags.
 
-Classes in this version: rogue, warrior and warlock. More classes are being added.
+Classes in this version: all nine (warrior, paladin, hunter, rogue, priest, shaman, mage, warlock, druid), with every leveling spec. The spec and its weapon setup are read from Forever Leveling BiS when that addon is installed; consumables follow the class and spec too.
 
 ## Install
 

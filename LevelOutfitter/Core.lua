@@ -5,7 +5,7 @@ _G.LevelOutfitter = ns
 
 local tonumber, pairs, ipairs, type, floor, pcall, huge = tonumber, pairs, ipairs, type, math.floor, pcall, math.huge
 
-ns.VERSION = "0.7.0"
+ns.VERSION = "0.8.0"
 -- The levels the lists are made for: one range, chosen by the player (ns.Range, ns.SetRange). It is kept here as a
 -- list of one, because the lists are built per "segment".
 ns.SEGMENTS = { { 1, 60 } }
@@ -67,8 +67,8 @@ function ns.ClassData()
     return ns.class and ns.DATA.classes[ns.class] or nil
 end
 
--- true when the lists are made and the class is one the addon has lists for (19 Nov: rogue, warrior, warlock; the
--- other six are in Data.lua but not ready yet)
+-- true when the lists are made and the class is one the addon has lists for (0.8.0: all nine; `ready` in Data.lua
+-- can still switch one off)
 function ns.Known()
     local C = ns.ClassData()
     return C ~= nil and C.ready == true
@@ -87,10 +87,33 @@ end
 ns.spec, ns.pick = nil, nil
 local handsAt = {}                          -- handsAt[L] = { main = { [inv] = true }, off = { ... } }, setupAt[L]
 local setupAt = {}
+-- The level from which the character wields weapon type `sub` (Forever Leveling BiS's Wields): below trainLevel only
+-- the types its race and class start with (the race from UnitRace; not known: what every race of the class starts
+-- with), from it every type its class learns (polearms from 20). NOT the rogue: its rules are the owner's own (no
+-- daggers, its own swords) and its plans stay as they were: polearms from 20, else from level 1.
+ns.race = nil
+local function WeaponFrom(C, sub)
+    local D = ns.DATA
+    local t = D.train[sub] or 1
+    local start = C.start and (C.start[ns.race or 0] or C.startAny)
+    if not start then return t end
+    if start[sub] then return 1 end
+    return t > D.trainLevel and t or D.trainLevel
+end
+ns.WeaponFrom = function(sub)
+    local C = ns.ClassData()
+    return C and WeaponFrom(C, sub) or 61
+end
 local function CanSetup(C, key, L)
     if key == "dualwield" then return C.dw ~= nil and L >= C.dw end
     if key == "shield" then return C.shield == true end
-    if key == "twohand" then return C.twohand ~= nil and L >= C.twohand end
+    if key == "twohand" then
+        if not C.twohandSubs then return C.twohand ~= nil and L >= C.twohand end      -- (the rogue: never)
+        for _, sub in ipairs(C.twohandSubs) do
+            if L >= WeaponFrom(C, sub) then return true end
+        end
+        return false
+    end
     return ns.DATA.setups[key] ~= nil
 end
 -- The setups Forever Leveling BiS offers this spec at level L (its WeaponSetupOptions): the spec's own ones the class
@@ -167,8 +190,10 @@ function ns.SetSpec(spec, pick)
         if pick == list[1] then pick = nil end
     end
     if spec == ns.spec and pick == ns.pick and handsAt[1] then return false end
+    local newSpec = spec ~= ns.spec
     ns.spec, ns.pick = spec, pick
     Hands()
+    if newSpec and ns.Scroll and ns.Scroll.ForClass then ns.Scroll.ForClass() end     -- (kinds for some specs only)
     return ns.Refit()
 end
 
@@ -188,23 +213,35 @@ function ns.Refit()
 end
 
 -- The level this class can wear a row of Data.lua from, whatever the hands: mail and plate from 40, polearms from 20.
--- nil when it cannot wear it at all.
+-- nil when it cannot wear it at all (armor too heavy, a relic of another class, a shield it does not carry).
 local function From(C, req, cls, sub, inv)
     local D = ns.DATA
     if cls == 4 and ARMOR_INV[inv] and sub >= 1 and sub <= 4 then
         if sub > C.armor then return nil end
         if C.armor >= 3 and sub == C.armor and req < D.armorUpgrade then req = D.armorUpgrade end
-    elseif cls == 2 and D.train[sub] and req < D.train[sub] then
-        req = D.train[sub]
+    elseif cls == 4 and inv == 28 and sub ~= C.relic then
+        return nil                                      -- a relic of another class (or a class that carries none)
+    elseif inv == 14 and not C.shield then
+        return nil                                      -- a shield for a class that carries none
+    elseif cls == 2 and req < WeaponFrom(C, sub) then
+        req = WeaponFrom(C, sub)                        -- (polearms from 20; below 10 only the start weapons)
     end
     return req
 end
 
-function ns.LoadData()
+-- `final`: entering the world, the last chance: a race the game still cannot tell counts as unknown (startAny)
+function ns.LoadData(final)
     if ns.loaded then return ns.loaded.items, ns.loaded.cands end       -- the raw lines are gone after the first run
     local D = ns.DATA
     local class = ns.Class()
     if not class then return 0, 0 end                                  -- the game does not know it yet: at the login
+    if type(UnitRace) == "function" then                               -- (the third answer is the race id)
+        local ok, _, _, id = pcall(UnitRace, "player")
+        ns.race = ok and type(id) == "number" and id or nil
+        -- a class with start weapons waits for its race like an unknown class (tried again at the login and on
+        -- entering the world); the rogue has none and never waits
+        if not ns.race and not final and D.classes[class] and D.classes[class].start then return 0, 0 end
+    end
     ns.class = class
     local C = D.classes[class]
     local item, byId = ns.item, ns.byId
@@ -545,10 +582,10 @@ function ns.InitDB()
 end
 
 -- This character's part (gold limit, gold spent, what it owns), set up at login when the game knows who plays.
-function ns.Login()
+function ns.Login(final)
     local db = ns.db or ns.InitDB()
-    if not ns.loaded then                             -- the class was not known while the files loaded
-        ns.LoadData()
+    if not ns.loaded then                             -- the class (or its race) was not known while the files loaded
+        ns.LoadData(final)
         if ns.Scroll and ns.Scroll.ForClass then ns.Scroll.ForClass() end
     end
     local name = UnitName and UnitName("player") or "?"
@@ -637,7 +674,7 @@ if CreateFrame then
             ns.Login()
         elseif event == "PLAYER_ENTERING_WORLD" then
             -- the class was still unknown at the login: try again now (Login makes the lists, then the rest)
-            if not ns.loaded and ns.db then ns.Login() end
+            if not ns.loaded and ns.db then ns.Login(true) end
         elseif name == ADDON then
             self:UnregisterEvent("ADDON_LOADED")
             ns.InitDB()

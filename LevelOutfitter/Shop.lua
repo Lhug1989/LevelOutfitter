@@ -20,6 +20,7 @@ local REST = 0.4                   -- the slider must rest this long before a se
 local OWN_GAP = 30                 -- seconds between re-plans caused by a change in the bags
 local MAX_AUTO = 8                 -- re-plans a scan may trigger by itself (prices that keep moving need a new scan)
 local LAST_RESORT = 1e6            -- a gold weight at which nothing that costs money is worth buying
+local REV_RESTARTS = 3             -- plans made anew in a row because the weights changed meanwhile; then the list is shown
 
 Shop.segment = 1                   -- the level segment on show (index into ns.SEGMENTS: there is one, the chosen range)
 Shop.auto = 0
@@ -159,8 +160,14 @@ local function Finish(job)
     end
     Shop.curve = job.curve
     if Shop.again == "full" then return Start(true) end
-    -- the weights or the spec changed while it was worked out (pieces fit other levels now): never shown, made anew
-    if job.env and job.env.rev ~= ns.Score.rev then return Start(true) end
+    -- the weights or the spec changed while it was worked out (pieces fit other levels now): made anew, at most
+    -- REV_RESTARTS times in a row (an addon whose answer keeps flipping must not keep the list away for good: then
+    -- it is shown, and Buy waits for a list made for the weights in force)
+    if job.env and job.env.rev ~= ns.Score.rev and (Shop.revRestarts or 0) < REV_RESTARTS then
+        Shop.revRestarts = (Shop.revRestarts or 0) + 1
+        return Start(true)
+    end
+    if job.env and job.env.rev == ns.Score.rev then Shop.revRestarts = nil end
     Show(job.pick)
     if Shop.wish then                           -- a "Cheapest / Smart / Best" click that waited for these fresh plans
         local name = Shop.wish
@@ -179,6 +186,8 @@ local function RunJob(job)
         local ok, err = resume(job.co)
         if not ok then
             Shop.job, Shop.error = nil, tostring(err)
+            Shop.errorRev = job.env and job.env.rev or ns.Score.rev  -- the weights it failed with
+            Shop.restAt = nil                                         -- only a new scan or new weights try again
             Shop.wish, Shop.wishTries = nil, nil        -- a shortcut that waited for these plans is off
             Scan.Say("Level Outfitter could not work out the list: " .. tostring(err), "bad")
             return
@@ -342,6 +351,10 @@ function Shop.CanBuy(row)
     if not me or type(row) ~= "table" then return false, "Nothing to buy." end
     if row.view ~= Shop.view then return false, "The list changed." end
     -- made for other weights or another spec (Forever Leveling BiS changed meanwhile): it is being worked out again
+    -- (or that failed: then a new scan is the way on)
+    if Shop.error and not Shop.job and Shop.env and Shop.env.rev ~= ns.Score.rev then
+        return false, "The list could not be worked out for the new weights. Press Scan to try again."
+    end
     if Shop.env and Shop.env.rev ~= ns.Score.rev then return false, "The list is being worked out again." end
     -- a consumable payment nobody answered yet: the purse must stay readable until it is settled
     if ns.Scroll and ns.Scroll.Unsettled() then return false, ns.Scroll.late and ns.Scroll.UNSURE or ns.Scroll.WAITING end
@@ -430,6 +443,7 @@ end
 
 ns.OnScanned = function()
     Shop.auto = 0
+    Shop.revRestarts, Shop.errorRetryAt = nil, nil
     Shop.Replan()
 end
 
@@ -437,6 +451,17 @@ end
 function Shop.Check(now)
     if Shop.job or not ns.me or not ns.Known() then return end
     if not Scan.state.scanned or Scan.state.phase ~= "idle" then return end
+    -- after a failure only a new scan tries again, or new weights or a new spec (once for each: it may have been
+    -- them, and the list on show is for the old ones)
+    -- (at most once every OWN_GAP seconds: weights that keep changing must not start plan after failing plan)
+    if Shop.error then
+        ns.Score.Use()
+        if Shop.errorRev ~= ns.Score.rev and (not Shop.errorRetryAt or now - Shop.errorRetryAt > OWN_GAP) then
+            Shop.errorRetryAt = now
+            return Start(true)
+        end
+        Shop.restAt = nil                       -- (the gold slider moved meanwhile: with the same weights no new try)
+    end
     if not Shop.curve then
         if Shop.error then return end           -- it failed: only a new scan tries again, not this check
         return Start(true)
@@ -456,7 +481,10 @@ function Shop.Check(now)
     end
     -- the stat weights changed (the other addon was updated, or a profile was picked there): every score is new
     ns.Score.Use()
-    if Shop.env and Shop.env.rev ~= ns.Score.rev then return Start(true) end
+    if Shop.env and Shop.env.rev == ns.Score.rev then Shop.revRestarts = nil end     -- they hold still: count anew
+    -- (after REV_RESTARTS rounds in a row that the weights outran, the list on show stays for a while: OWN_GAP)
+    if Shop.env and Shop.env.rev ~= ns.Score.rev
+        and ((Shop.revRestarts or 0) < REV_RESTARTS or now - (Shop.startedAt or 0) > OWN_GAP) then return Start(true) end
     Own.Counts()
     if ns.ownRev ~= Shop.ownRev and now - (Shop.startedAt or 0) > OWN_GAP then return Start(true) end
     local view, v = Shop.view, Scan.verify

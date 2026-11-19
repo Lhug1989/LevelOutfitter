@@ -222,7 +222,7 @@ local function byWorth(a, b)
     return a < b
 end
 
-local function Paced(S, best, ref, free, price, gw, minGain, first, last, idx)
+local function Paced(S, best, ref, free, price, gw, minGain, first, last, idx, cands)
     local P = ns.DATA.P
     local lam, INF = P.lam, huge
     local BIG = lam * (1.0 / P.grace)                -- one level past the limit costs a third of a purchase
@@ -230,6 +230,9 @@ local function Paced(S, best, ref, free, price, gw, minGain, first, last, idx)
     -- only counts inside the range. A piece bought now serves for about that stretch all the same, so a purchase
     -- is charged that much less (level 60 alone is a range of one level, and the character stays there).
     local stretch = max(1, (ns.SPAN or 10) / (last - first + 1))
+    -- ... unless its spec's hands stop taking it before then (a fury warrior's two-hander ends at 19): it is charged
+    -- for the levels it really serves (0.8.0)
+    local span, levels = ns.SPAN or 10, last - first + 1
     local n, A, step = #idx, P.maxGap + 1, 1.0 + minGain
     local nA = n * A
     local cost, f, nf, back, fe = costBuf, bufA, bufB, backBuf, 0.0
@@ -238,7 +241,9 @@ local function Paced(S, best, ref, free, price, gw, minGain, first, last, idx)
         if free[i] then
             cost[x] = 0.0
         elseif price[i] then
-            cost[x] = (lam + gw * (price[i] / 10000.0)) / stretch
+            local s, upto = stretch, cands[i].upto
+            if s > 1 and upto and upto < NLEV then s = max(1, min(s, min(span, upto - first + 1) / levels)) end
+            cost[x] = (lam + gw * (price[i] / 10000.0)) / s
         else
             cost[x] = INF                             -- no price: can never be bought
         end
@@ -412,7 +417,7 @@ function Plan.Run(env, gw, yield)
             end
         end
         local need = D.weapon[label] and P.weaponGain or P.armorGain
-        local segs = Paced(S, bav, env.ref, free, price, gw, need, first, last, idx)
+        local segs = Paced(S, bav, env.ref, free, price, gw, need, first, last, idx, cands)
         local rows, hadKey = {}, {}
         for n = 1, #segs do
             local i, lo, hi = segs[n][1], segs[n][2], segs[n][3]

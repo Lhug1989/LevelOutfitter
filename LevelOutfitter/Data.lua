@@ -31,6 +31,7 @@ ns.DATA = {
     -- level the first one the class can use; dualwield only from `dw`; else "onehand"). useful: stats it values
     -- (armor and jewelry with none of them is never listed). owned: pieces it starts with as bought.
     armorUpgrade = 40, train = { [6] = 20 },        -- weapon types taught from a level (polearms 20)
+    trainLevel = 10,      -- below it a character wields only its start weapons (classes.<X>.start; not the rogue)
     setups = {
         dualwield = { main = { [13] = true, [21] = true }, off = { [13] = true, [22] = true } },
         held = { main = { [13] = true, [21] = true }, off = { [14] = true, [23] = true } },
@@ -39,8 +40,12 @@ ns.DATA = {
         twohand = { main = { [17] = true }, off = {  } },
     },
     classes = {
-        WARRIOR = { id = 1, letter = "W", name = "warrior", armor = 4, dw = 20, shield = true, relic = nil, twohand = 1,
+        WARRIOR = { id = 1, letter = "W", name = "warrior", armor = 4, dw = 20, shield = true, relic = nil, twohand = 10,
             ready = true,      -- lists made for this class (else the window says it has none yet)
+            race = 1,      -- the race the offline plans and the tests are made for
+            start = { [1] = { [0] = true, [4] = true, [7] = true }, [2] = { [0] = true, [1] = true, [7] = true }, [3] = { [0] = true, [1] = true, [4] = true }, [4] = { [4] = true, [7] = true, [15] = true }, [5] = { [7] = true, [8] = true, [15] = true }, [6] = { [0] = true, [4] = true, [5] = true }, [7] = { [4] = true, [7] = true, [15] = true }, [8] = { [0] = true, [15] = true, [16] = true }, [95] = { [2] = true, [4] = true, [5] = true, [7] = true, [8] = true, [15] = true, [16] = true }, [96] = { [2] = true, [4] = true, [5] = true, [7] = true, [8] = true, [15] = true, [16] = true } },
+            startAny = {  },      -- what every race of the class starts with (race unknown)
+            twohandSubs = { 1, 5, 6, 8, 10 },
             kinds = { "Strength elixir", "Strength scroll", "Agility elixir", "Agility scroll", "Attack power drink", "Healing potion", "Sharpening stone", "Weightstone", "Food", "Stamina scroll", "Health elixir", "Armor elixir", "Protection scroll", "Regeneration elixir", "Spirit scroll", "Swiftness potion", "Free action potion" },
             notes = { ["Food"] = "Eat it sitting down for a buff. Only one food buff works at a time. Smoked Desert Dumplings give strength.", ["Sharpening stone"] = "Use it on a sword, axe or polearm: it hits harder for a while.", ["Weightstone"] = "Use it on a mace or fist weapon: it hits harder for a while." },
             specs = { "arms", "fury", "protection" },
@@ -95,9 +100,14 @@ ns.DATA = {
             },
         },
         PALADIN = { id = 2, letter = "P", name = "paladin", armor = 4, dw = nil, shield = true, relic = 7, twohand = 1,
-            ready = false,      -- lists made for this class (else the window says it has none yet)
-            kinds = {  },
-            notes = {  },
+            ready = true,      -- lists made for this class (else the window says it has none yet)
+            race = 1,      -- the race the offline plans and the tests are made for
+            start = { [1] = { [4] = true, [5] = true }, [3] = { [4] = true, [5] = true }, [5] = { [4] = true, [5] = true } },
+            startAny = { [4] = true, [5] = true },      -- what every race of the class starts with (race unknown)
+            twohandSubs = { 1, 5, 6, 8 },
+            kinds = { "Strength elixir", "Strength scroll", "Agility elixir", "Agility scroll", "Attack power drink", "Intellect scroll", "Intellect elixir", "Spirit scroll", "Spirit elixir", "Mana potion", "Mana regeneration elixir", "Spell power elixir", "Healing potion", "Sharpening stone", "Weightstone", "Food", "Mana food", "Stamina scroll", "Health elixir", "Armor elixir", "Protection scroll", "Regeneration elixir", "Swiftness potion", "Free action potion" },
+            specKinds = { ["Spell power elixir"] = { "protection", "retribution" } },      -- shown only for these specs
+            notes = { ["Food"] = "Eat it sitting down for a buff. Only one food buff works at a time. Smoked Desert Dumplings give strength.", ["Sharpening stone"] = "Use it on a sword, axe or polearm: it hits harder for a while.", ["Spirit scroll"] = "Spirit: mana and health come back faster between fights.", ["Weightstone"] = "Use it on a mace: it hits harder for a while." },
             specs = { "holy", "protection", "retribution" },
             specNames = { holy = "holy", protection = "protection", retribution = "retribution" },
             setups = { holy = { "held", "twohand" }, protection = { "shield" }, retribution = { "twohand" } },
@@ -149,10 +159,14 @@ ns.DATA = {
                 },
             },
         },
-        HUNTER = { id = 3, letter = "H", name = "hunter", armor = 3, dw = 20, shield = false, relic = nil, twohand = 1,
-            ready = false,      -- lists made for this class (else the window says it has none yet)
-            kinds = {  },
-            notes = {  },
+        HUNTER = { id = 3, letter = "H", name = "hunter", armor = 3, dw = 20, shield = false, relic = nil, twohand = 10,
+            ready = true,      -- lists made for this class (else the window says it has none yet)
+            race = 4,      -- the race the offline plans and the tests are made for
+            start = { [1] = { [2] = true, [15] = true }, [2] = { [0] = true, [2] = true, [15] = true }, [3] = { [0] = true, [3] = true, [15] = true }, [4] = { [2] = true, [15] = true }, [6] = { [0] = true, [3] = true, [15] = true }, [8] = { [0] = true, [2] = true, [15] = true }, [95] = { [2] = true, [7] = true, [8] = true, [15] = true }, [96] = { [2] = true, [7] = true, [8] = true, [15] = true } },
+            startAny = { [15] = true },      -- what every race of the class starts with (race unknown)
+            twohandSubs = { 1, 6, 8, 10 },
+            kinds = { "Agility elixir", "Agility scroll", "Intellect scroll", "Intellect elixir", "Spirit scroll", "Spirit elixir", "Mana potion", "Mana regeneration elixir", "Healing potion", "Food", "Mana food", "Stamina scroll", "Health elixir", "Armor elixir", "Protection scroll", "Regeneration elixir", "Swiftness potion", "Free action potion" },
+            notes = { ["Food"] = "Eat it sitting down for a buff. Only one food buff works at a time. Grilled Squid gives agility.", ["Spirit scroll"] = "Spirit: mana and health come back faster between fights." },
             specs = { "beastmastery", "marksmanship", "survival", "survivalmelee" },
             specNames = { beastmastery = "beast mastery", marksmanship = "marksmanship", survival = "survival", survivalmelee = "survival (melee)" },
             setups = { beastmastery = { "twohand", "dualwield" }, marksmanship = { "twohand", "dualwield" }, survival = { "twohand", "dualwield" }, survivalmelee = { "twohand", "dualwield" } },
@@ -245,10 +259,15 @@ ns.DATA = {
                 },
             },
         },
-        PRIEST = { id = 5, letter = "I", name = "priest", armor = 1, dw = nil, shield = false, relic = nil, twohand = 1,
-            ready = false,      -- lists made for this class (else the window says it has none yet)
-            kinds = {  },
-            notes = {  },
+        PRIEST = { id = 5, letter = "I", name = "priest", armor = 1, dw = nil, shield = false, relic = nil, twohand = 10,
+            ready = true,      -- lists made for this class (else the window says it has none yet)
+            race = 1,      -- the race the offline plans and the tests are made for
+            start = { [1] = { [4] = true, [19] = true }, [3] = { [4] = true, [19] = true }, [4] = { [4] = true, [19] = true }, [5] = { [4] = true, [19] = true }, [7] = { [4] = true, [19] = true }, [8] = { [4] = true, [19] = true } },
+            startAny = { [4] = true, [19] = true },      -- what every race of the class starts with (race unknown)
+            twohandSubs = { 10 },
+            kinds = { "Intellect scroll", "Intellect elixir", "Spirit scroll", "Spirit elixir", "Mana potion", "Mana regeneration elixir", "Spell power elixir", "Shadow power elixir", "Healing potion", "Food", "Mana food", "Stamina scroll", "Health elixir", "Armor elixir", "Protection scroll", "Regeneration elixir", "Swiftness potion", "Free action potion" },
+            specKinds = { ["Shadow power elixir"] = { "shadow" }, ["Spell power elixir"] = { "shadow" } },      -- shown only for these specs
+            notes = { ["Food"] = "Eat it sitting down for a buff. Only one food buff works at a time.", ["Spirit scroll"] = "Spirit: mana and health come back faster between fights." },
             specs = { "discipline", "holy", "shadow" },
             specNames = { discipline = "discipline", holy = "holy", shadow = "shadow" },
             setups = { discipline = { "twohand", "held" }, holy = { "twohand", "held" }, shadow = { "twohand", "held" } },
@@ -301,9 +320,14 @@ ns.DATA = {
             },
         },
         SHAMAN = { id = 7, letter = "S", name = "shaman", armor = 3, dw = nil, shield = true, relic = 9, twohand = 1,
-            ready = false,      -- lists made for this class (else the window says it has none yet)
-            kinds = {  },
-            notes = {  },
+            ready = true,      -- lists made for this class (else the window says it has none yet)
+            race = 3,      -- the race the offline plans and the tests are made for
+            start = { [2] = { [4] = true, [10] = true }, [3] = { [4] = true, [10] = true }, [6] = { [4] = true, [10] = true }, [8] = { [4] = true, [10] = true }, [96] = { [4] = true, [5] = true, [10] = true, [15] = true } },
+            startAny = { [4] = true, [10] = true },      -- what every race of the class starts with (race unknown)
+            twohandSubs = { 1, 5, 10 },
+            kinds = { "Strength elixir", "Strength scroll", "Agility elixir", "Agility scroll", "Attack power drink", "Intellect scroll", "Intellect elixir", "Spirit scroll", "Spirit elixir", "Mana potion", "Mana regeneration elixir", "Spell power elixir", "Healing potion", "Sharpening stone", "Weightstone", "Food", "Mana food", "Stamina scroll", "Health elixir", "Armor elixir", "Protection scroll", "Regeneration elixir", "Swiftness potion", "Free action potion" },
+            specKinds = { ["Spell power elixir"] = { "elemental", "enhancement" } },      -- shown only for these specs
+            notes = { ["Food"] = "Eat it sitting down for a buff. Only one food buff works at a time. Smoked Desert Dumplings give strength.", ["Sharpening stone"] = "Use it on an axe or dagger: it hits harder for a while. A shaman weapon spell (Rockbiter, Flametongue, Windfury) takes its place.", ["Spirit scroll"] = "Spirit: mana and health come back faster between fights.", ["Weightstone"] = "Use it on a mace, fist weapon or staff: it hits harder for a while. A shaman weapon spell (Rockbiter, Flametongue, Windfury) takes its place." },
             specs = { "elemental", "enhancement", "restoration" },
             specNames = { elemental = "elemental", enhancement = "enhancement", restoration = "restoration" },
             setups = { elemental = { "held", "twohand" }, enhancement = { "twohand", "shield" }, restoration = { "held", "twohand" } },
@@ -372,9 +396,14 @@ ns.DATA = {
             },
         },
         MAGE = { id = 8, letter = "M", name = "mage", armor = 1, dw = nil, shield = false, relic = nil, twohand = 1,
-            ready = false,      -- lists made for this class (else the window says it has none yet)
-            kinds = {  },
-            notes = {  },
+            ready = true,      -- lists made for this class (else the window says it has none yet)
+            race = 1,      -- the race the offline plans and the tests are made for
+            start = { [1] = { [10] = true, [19] = true }, [2] = { [10] = true, [19] = true }, [5] = { [10] = true, [19] = true }, [7] = { [10] = true, [19] = true }, [8] = { [10] = true, [19] = true }, [95] = { [10] = true, [15] = true, [19] = true } },
+            startAny = { [10] = true, [19] = true },      -- what every race of the class starts with (race unknown)
+            twohandSubs = { 10 },
+            kinds = { "Intellect scroll", "Intellect elixir", "Spirit scroll", "Spirit elixir", "Mana potion", "Mana regeneration elixir", "Spell power elixir", "Frost power elixir", "Healing potion", "Food", "Mana food", "Stamina scroll", "Health elixir", "Armor elixir", "Protection scroll", "Regeneration elixir", "Swiftness potion", "Free action potion" },
+            specKinds = { ["Frost power elixir"] = { "frost" } },      -- shown only for these specs
+            notes = { ["Food"] = "Eat it sitting down for a buff. Only one food buff works at a time.", ["Spirit scroll"] = "Spirit: mana and health come back faster between fights." },
             specs = { "arcane", "fire", "frost" },
             specNames = { arcane = "arcane", fire = "fire", frost = "frost" },
             setups = { arcane = { "twohand", "held" }, fire = { "twohand", "held" }, frost = { "twohand", "held" } },
@@ -426,10 +455,14 @@ ns.DATA = {
                 },
             },
         },
-        WARLOCK = { id = 9, letter = "L", name = "warlock", armor = 1, dw = nil, shield = false, relic = nil, twohand = 1,
+        WARLOCK = { id = 9, letter = "L", name = "warlock", armor = 1, dw = nil, shield = false, relic = nil, twohand = 10,
             ready = true,      -- lists made for this class (else the window says it has none yet)
-            kinds = { "Intellect scroll", "Stamina scroll", "Spirit scroll", "Health elixir", "Healing potion", "Armor elixir", "Protection scroll", "Regeneration elixir", "Food", "Swiftness potion", "Free action potion" },
-            notes = { ["Food"] = "Eat it sitting down for a buff. Only one food buff works at a time." },
+            race = 1,      -- the race the offline plans and the tests are made for
+            start = { [1] = { [15] = true, [19] = true }, [2] = { [15] = true, [19] = true }, [5] = { [15] = true, [19] = true }, [7] = { [15] = true, [19] = true }, [8] = { [15] = true, [19] = true } },
+            startAny = { [15] = true, [19] = true },      -- what every race of the class starts with (race unknown)
+            twohandSubs = { 10 },
+            kinds = { "Intellect scroll", "Intellect elixir", "Spirit scroll", "Mana potion", "Mana regeneration elixir", "Spell power elixir", "Shadow power elixir", "Healing potion", "Food", "Mana food", "Stamina scroll", "Health elixir", "Armor elixir", "Protection scroll", "Regeneration elixir", "Swiftness potion", "Free action potion" },
+            notes = { ["Food"] = "Eat it sitting down for a buff. Only one food buff works at a time.", ["Spirit scroll"] = "Spirit: mana and health come back faster between fights." },
             specs = { "affliction", "demonology", "destruction" },
             specNames = { affliction = "affliction", demonology = "demonology", destruction = "destruction" },
             setups = { affliction = { "twohand", "held" }, demonology = { "twohand", "held" }, destruction = { "twohand", "held" } },
@@ -482,9 +515,14 @@ ns.DATA = {
             },
         },
         DRUID = { id = 11, letter = "D", name = "druid", armor = 2, dw = nil, shield = false, relic = 8, twohand = 1,
-            ready = false,      -- lists made for this class (else the window says it has none yet)
-            kinds = {  },
-            notes = {  },
+            ready = true,      -- lists made for this class (else the window says it has none yet)
+            race = 4,      -- the race the offline plans and the tests are made for
+            start = { [4] = { [10] = true, [15] = true }, [6] = { [4] = true, [10] = true }, [95] = { [4] = true, [5] = true, [10] = true, [15] = true }, [96] = { [4] = true, [5] = true, [10] = true, [15] = true } },
+            startAny = { [10] = true },      -- what every race of the class starts with (race unknown)
+            twohandSubs = { 5, 6, 10 },
+            kinds = { "Strength elixir", "Strength scroll", "Agility elixir", "Agility scroll", "Attack power drink", "Intellect scroll", "Intellect elixir", "Spirit scroll", "Spirit elixir", "Mana potion", "Mana regeneration elixir", "Spell power elixir", "Healing potion", "Food", "Mana food", "Stamina scroll", "Health elixir", "Armor elixir", "Protection scroll", "Regeneration elixir", "Swiftness potion", "Free action potion" },
+            specKinds = { ["Spell power elixir"] = { "balance" } },      -- shown only for these specs
+            notes = { ["Food"] = "Eat it sitting down for a buff. Only one food buff works at a time. Grilled Squid gives agility, Smoked Desert Dumplings strength.", ["Spirit scroll"] = "Spirit: mana and health come back faster between fights." },
             specs = { "balance", "feral", "bear", "restoration" },
             specNames = { balance = "balance", feral = "feral", bear = "feral (bear)", restoration = "restoration" },
             setups = { balance = { "twohand", "held" }, feral = { "twohand", "held" }, bear = { "twohand", "held" }, restoration = { "twohand", "held" } },
@@ -755,6 +793,14 @@ ns.DATA = {
         { "Swiftness potion", 1, "A short burst of running speed: to get away or to catch up.", "Potions" },
         { "Free action potion", 1, "Shrugs off roots and snares for a short while: handy on a PvP realm.", "Potions" },
         { "Intellect scroll", 2, "Intellect: more mana, and spells hit hard more often.", "Scrolls" },
+        { "Mana potion", 3, "Drink it in a fight to get mana back at once.", "Potions" },
+        { "Intellect elixir", 1, "Intellect: more mana, and spells hit hard more often.", "Elixirs and drinks" },
+        { "Spirit elixir", 1, "Spirit: mana and health come back faster between fights.", "Elixirs and drinks" },
+        { "Spell power elixir", 1, "Spell damage: damage spells hit harder (heals do not).", "Elixirs and drinks" },
+        { "Shadow power elixir", 1, "Shadow spells hit harder.", "Elixirs and drinks" },
+        { "Frost power elixir", 1, "Frost spells hit harder.", "Elixirs and drinks" },
+        { "Mana regeneration elixir", 1, "Mana comes back all the time, also in a fight.", "Elixirs and drinks" },
+        { "Mana food", 4, "Eat it sitting down: mana comes back faster for a while. Only one food buff works at a time.", "Food" },
     },
     -- consumables: { item id, name, kind, rank within its kind (1 = weakest), level it can be used from }
     consumables = {
@@ -826,6 +872,32 @@ ns.DATA = {
         { 2290, "Scroll of Intellect II", "Intellect scroll", 2, 20 },
         { 4419, "Scroll of Intellect III", "Intellect scroll", 3, 35 },
         { 10308, "Scroll of Intellect IV", "Intellect scroll", 4, 50 },
+        { 2455, "Minor Mana Potion", "Mana potion", 1, 5 },
+        { 3385, "Lesser Mana Potion", "Mana potion", 2, 14 },
+        { 3827, "Mana Potion", "Mana potion", 3, 22 },
+        { 6149, "Greater Mana Potion", "Mana potion", 4, 31 },
+        { 13443, "Superior Mana Potion", "Mana potion", 5, 41 },
+        { 13444, "Major Mana Potion", "Mana potion", 6, 49 },
+        { 3383, "Elixir of Wisdom", "Intellect elixir", 1, 10 },
+        { 250353, "Elixir of Lesser Intellect", "Intellect elixir", 2, 25 },
+        { 9179, "Elixir of Greater Intellect", "Intellect elixir", 3, 37 },
+        { 250344, "Elixir of Minor Spirit", "Spirit elixir", 1, 5 },
+        { 250345, "Elixir of Lesser Spirit", "Spirit elixir", 2, 25 },
+        { 250346, "Elixir of Spirit", "Spirit elixir", 3, 45 },
+        { 250347, "Elixir of Greater Spirit", "Spirit elixir", 4, 55 },
+        { 247754, "Minor Arcane Elixir", "Spell power elixir", 1, 1 },
+        { 250342, "Lesser Arcane Elixir", "Spell power elixir", 2, 25 },
+        { 9155, "Arcane Elixir", "Spell power elixir", 3, 37 },
+        { 13454, "Greater Arcane Elixir", "Spell power elixir", 4, 47 },
+        { 9264, "Elixir of Shadow Power", "Shadow power elixir", 1, 40 },
+        { 17708, "Elixir of Frost Power", "Frost power elixir", 1, 28 },
+        { 250339, "Minor Mageblood Elixir", "Mana regeneration elixir", 1, 5 },
+        { 250340, "Lesser Mageblood Elixir", "Mana regeneration elixir", 2, 25 },
+        { 20007, "Mageblood Elixir", "Mana regeneration elixir", 3, 40 },
+        { 250341, "Greater Mageblood Elixir", "Mana regeneration elixir", 4, 55 },
+        { 21072, "Smoked Sagefish", "Mana food", 1, 10 },
+        { 21217, "Sagefish Delight", "Mana food", 2, 30 },
+        { 13931, "Nightfin Soup", "Mana food", 3, 35 },
     },
 }
 ns.DATA.items = {

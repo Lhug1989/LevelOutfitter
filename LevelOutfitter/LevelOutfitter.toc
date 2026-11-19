@@ -1,0 +1,17 @@
+## Interface: 16001
+## Title: Level Outfitter
+## Notes: Scans the auction house and builds leveling gear shopping lists from live prices: the most for any gold limit, split by level, ready to buy.
+## Author: WoWUI
+## Version: 0.7.0
+## OptionalDeps: ForeverLevelingBiS
+## SavedVariables: LevelOutfitterDB
+
+Data.lua
+Core.lua
+Plan.lua
+Own.lua
+Scan.lua
+Shop.lua
+Scroll.lua
+Bar.lua
+UI.lua

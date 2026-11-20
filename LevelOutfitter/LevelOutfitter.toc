@@ -2,7 +2,7 @@
 ## Title: Level Outfitter
 ## Notes: Scans the auction house and builds leveling gear shopping lists from live prices: the most for any gold limit, split by level, ready to buy.
 ## Author: WoWUI
-## Version: 0.8.0
+## Version: 0.8.1
 ## OptionalDeps: ForeverLevelingBiS
 ## SavedVariables: LevelOutfitterDB
 

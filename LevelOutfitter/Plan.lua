@@ -48,6 +48,8 @@ local function Blocked(row, last)       -- the same scores, but not wearable up 
     return out
 end
 
+local PRIMARY = { "str", "agi", "int", "spi", "sta" }      -- the main stats: one point of the best is a fill's floor
+
 -- Everything that does not change with the gold weight -------------------------------------------------
 -- prices[key] = copper for every piece on the auction house (key = "itemId:bonusId").
 -- owned[key]  = true or a number of copies already bought: they cost nothing.
@@ -150,6 +152,22 @@ function Plan.Env(prices, owned, opt)
         for _, g in ipairs(D.groups) do t = t + env.groups[g].best[L] * (D.double[g] and 2 or 1) end
         env.ref[L] = max(1, t)
     end
+    -- (0.8.1) The least an empty slot's best piece must be worth before the slot has to be filled: one point of the
+    -- class's main stat (the largest of its str/agi/int/spi/sta weights, to one decimal as scores are), never more
+    -- than P.fillFloor and never under 0.1. P.fillFloor (2.0) is in the rogue's units; a caster's weights put one
+    -- point of intellect at 0.2 to 0.4, so with 2.0 alone its low-level cloth never had to be bought.
+    env.floor = {}
+    local cap = D.P.fillFloor
+    for L = 1, NLEV do
+        local w, unit = Score.Row(at[L]), 0
+        if w then
+            for k = 1, #PRIMARY do
+                local v = w[PRIMARY[k]]
+                if v and v > unit then unit = v end
+            end
+        end
+        env.floor[L] = unit > 0 and min(cap, max(0.1, floor(unit * 10 + 0.5) / 10)) or cap
+    end
     return env
 end
 
@@ -222,7 +240,7 @@ local function byWorth(a, b)
     return a < b
 end
 
-local function Paced(S, best, ref, free, price, gw, minGain, first, last, idx, cands)
+local function Paced(S, best, ref, free, price, gw, minGain, first, last, idx, cands, fillAt)
     local P = ns.DATA.P
     local lam, INF = P.lam, huge
     local BIG = lam * (1.0 / P.grace)                -- one level past the limit costs a third of a purchase
@@ -277,7 +295,7 @@ local function Paced(S, best, ref, free, price, gw, minGain, first, last, idx, c
             if m[j] < pv then pv, pj = m[j], j end
             keys[i], prefV[i], prefJ[i] = wkey[j], pv, pj
         end
-        local fill = forced and bestL >= max(P.fillFloor, P.fillShare * ref[L])
+        local fill = forced and bestL >= max(fillAt[L], P.fillShare * ref[L])      -- fillAt: env.floor (0.8.1)
         for x = 1, n do
             local base = (x - 1) * A
             for a = 1, A do nf[base + a] = INF end
@@ -417,7 +435,7 @@ function Plan.Run(env, gw, yield)
             end
         end
         local need = D.weapon[label] and P.weaponGain or P.armorGain
-        local segs = Paced(S, bav, env.ref, free, price, gw, need, first, last, idx, cands)
+        local segs = Paced(S, bav, env.ref, free, price, gw, need, first, last, idx, cands, env.floor)
         local rows, hadKey = {}, {}
         for n = 1, #segs do
             local i, lo, hi = segs[n][1], segs[n][2], segs[n][3]

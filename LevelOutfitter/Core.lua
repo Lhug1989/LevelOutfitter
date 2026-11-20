@@ -5,7 +5,7 @@ _G.LevelOutfitter = ns
 
 local tonumber, pairs, ipairs, type, floor, pcall, huge = tonumber, pairs, ipairs, type, math.floor, pcall, math.huge
 
-ns.VERSION = "0.8.0"
+ns.VERSION = "0.8.1"
 -- The levels the lists are made for: one range, chosen by the player (ns.Range, ns.SetRange). It is kept here as a
 -- list of one, because the lists are built per "segment".
 ns.SEGMENTS = { { 1, 60 } }
@@ -959,6 +959,11 @@ end
 function Score.Weights(level)
     local map = Score.Use()
     return rows[map[level] or #rows]
+end
+
+-- The weights of bracket b exactly as Score.Of reads them (no reload: for a caller that just ran Score.Use).
+function Score.Row(b)
+    return rows and rows[b]
 end
 
 local function Order(stats)        -- stat names in a fixed order, so a score adds up the same way everywhere

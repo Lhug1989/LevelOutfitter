@@ -5,7 +5,7 @@ _G.LevelOutfitter = ns
 
 local tonumber, pairs, ipairs, type, floor, pcall, huge = tonumber, pairs, ipairs, type, math.floor, pcall, math.huge
 
-ns.VERSION = "0.8.1"
+ns.VERSION = "0.8.2"
 -- The levels the lists are made for: one range, chosen by the player (ns.Range, ns.SetRange). It is kept here as a
 -- list of one, because the lists are built per "segment".
 ns.SEGMENTS = { { 1, 60 } }
@@ -805,6 +805,17 @@ local function Clean(w)
     return out
 end
 
+-- Schools a spec never scores, whatever Forever Leveling BiS says (user 22 Nov, arcane mage offered "of Frozen Wrath":
+-- "we should be searching for just spell damage and not frozen dmg"). Same table in tools/wowhead/build_rogue.py.
+local SCHOOL_OFF = { MAGE = { arcane = { frosplpwr = true, firsplpwr = true } } }
+local function SchoolOff(w)
+    local off = SCHOOL_OFF[ns.class] and SCHOOL_OFF[ns.class][ns.spec]
+    if off then
+        for k in pairs(off) do w[k] = nil end
+    end
+    return w
+end
+
 local function Same(a, b)
     for k, v in pairs(a) do
         if b[k] ~= v then return false end
@@ -850,7 +861,7 @@ local function BuiltIn()
             end
         end
         if row ~= prev then
-            local w = Clean(row)
+            local w = SchoolOff(Clean(row))
             w.upTo = nil
             n = n + 1
             out[n], prev = w, row
@@ -869,7 +880,7 @@ local function Live()
     for L = 1, NLEV do
         local ok, w = pcall(api.GetWeights, ns.class, rogue and Score.SPEC or ns.spec, L, SetupFor(L))
         if not ok or type(w) ~= "table" then return nil end
-        w = Clean(w)
+        w = SchoolOff(Clean(w))
         w.upTo = nil
         if rogue then
             -- weights that give a main-hand weapon's damage no value are no weights for a rogue: not believed
